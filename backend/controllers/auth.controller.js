@@ -14,7 +14,7 @@ const signup = async (req, res) => {
         .status(400)
         .json({ error: "Password must be atleast 6 character" });
     }
-    const existingUser = await User.findOne({ $or: [{ username, email }] });
+    const existingUser = await User.findOne({ $or: [{ username }, { email }] });
     if (existingUser) {
       return res
         .status(400)
@@ -39,7 +39,7 @@ const signup = async (req, res) => {
       res.status(400).json({ error: "Invalid user data" });
     }
   } catch (error) {
-    console.log(`Error in signup controller: ${error.messge}`);
+    console.log(`Error in signup controller: ${error}`);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
