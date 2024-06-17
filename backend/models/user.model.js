@@ -14,7 +14,7 @@ const userSchema = new Schema(
     password: {
       type: String,
       required: true,
-      minLenght: 6,
+      minLength: 6,
     },
     email: {
       type: String,
@@ -51,6 +51,9 @@ const userSchema = new Schema(
       type: String,
       default: "",
     },
+    likedPosts: [
+      { type: mongoose.Schema.Types.ObjectId, ref: "Post", default: [] },
+    ],
   },
   { timestamps: true }
 );

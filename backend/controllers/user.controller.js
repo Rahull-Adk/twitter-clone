@@ -73,7 +73,7 @@ export const followUnFollowUser = async (req, res) => {
     }
   } catch (error) {
     console.log("Error at follow/unfollow controller", error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 
@@ -111,7 +111,7 @@ export const getSuggestedUser = async (req, res) => {
     return res.status(200).json({ suggestUser });
   } catch (error) {
     console.log("Error at suggestedUse controller", error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
 export const updateUserProfile = async (req, res) => {
@@ -161,7 +161,7 @@ export const updateUserProfile = async (req, res) => {
       } else if (currentPassword === newPassword) {
         return res
           .status(400)
-          .json({ message: "New password can not be same as old" });
+          .json({ error: "New password can not be same as old" });
       } else if (newPassword.length < 6) {
         return res
           .status(400)
@@ -203,6 +203,6 @@ export const updateUserProfile = async (req, res) => {
     return res.status(200).json(user);
   } catch (error) {
     console.log("Error at update controller", error);
-    return res.status(500).json({ message: error.message });
+    return res.status(500).json({ error: error.message });
   }
 };
