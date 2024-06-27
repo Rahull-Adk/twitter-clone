@@ -94,9 +94,9 @@ export const getSuggestedUser = async (req, res) => {
       },
       { $sample: { size: 10 } },
     ]);
-    console.log(users);
+
     // filter the users that the current user already followed.
-    console.log(userFollowedByMe);
+
     const filteredUsers = users.filter(
       // check if user._id (10 users excerpt me) is in my following's array
       (user) => !userFollowedByMe.following.includes(user._id)
@@ -108,7 +108,7 @@ export const getSuggestedUser = async (req, res) => {
     // remove their passwords
     suggestUser.forEach((user) => (user.password = null));
     // suggest them
-    return res.status(200).json({ suggestUser });
+    return res.status(200).json(suggestUser);
   } catch (error) {
     console.log("Error at suggestedUse controller", error);
     return res.status(500).json({ error: error.message });
