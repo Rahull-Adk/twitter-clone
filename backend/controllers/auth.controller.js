@@ -34,7 +34,9 @@ const signup = async (req, res) => {
       generateToken(newUser._id, res);
       await newUser.save();
       const createdUser = await User.findById(newUser._id).select("-password");
-      res.status(201).json({ user: createdUser });
+      res
+        .status(201)
+        .json({ user: createdUser, message: "User created successfully" });
     } else {
       res.status(400).json({ error: "Invalid user data" });
     }
@@ -58,9 +60,11 @@ const login = async (req, res) => {
     }
     generateToken(user._id, res);
     const loggedInUser = await User.findById(user._id).select("-password");
-    res.status(200).json({ user: loggedInUser });
+    res
+      .status(200)
+      .json({ user: loggedInUser, message: "User logged in successfully" });
   } catch (error) {
-    console.log(`Error in login controller: ${error.messge}`);
+    console.log(`Error in login controller: ${error}`);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
@@ -78,7 +82,7 @@ const logout = async (req, res) => {
 const getUser = async (req, res) => {
   try {
     const user = await User.findById(req.user._id).select("-password");
-    return res.status(200).json({ user });
+    return res.status(200).json({ user, message: "User fetched successfully" });
   } catch (error) {
     console.log(`Error in getUser controller: ${error.messge}`);
     res.status(500).json({ error: "Internal Server Error" });

@@ -1,18 +1,23 @@
 import { useRef, useState } from "react";
 import { Link } from "react-router-dom";
-
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
-
+import { useQuery } from "@tanstack/react-query";
 import { POSTS } from "../../utils/db/dummy";
-
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 
 const ProfilePage = () => {
+  const {
+    data: authUser,
+    error,
+    isLoading,
+  } = useQuery({
+    queryKey: ["authUsers"],
+  });
   const [coverImg, setCoverImg] = useState(null);
   const [profileImg, setProfileImg] = useState(null);
   const [feedType, setFeedType] = useState("posts");
@@ -20,7 +25,6 @@ const ProfilePage = () => {
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
 
-  const isLoading = false;
   const isMyProfile = true;
 
   const user = {
