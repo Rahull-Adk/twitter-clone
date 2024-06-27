@@ -1,23 +1,53 @@
 import { FaRegComment } from "react-icons/fa";
 import { BiRepost } from "react-icons/bi";
 import { FaRegHeart } from "react-icons/fa";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
 import { FaRegBookmark } from "react-icons/fa6";
+import axios from "axios";
 import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
+import LoadingSpinner from "./LoadingSpinner.jsx";
 import { Link } from "react-router-dom";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
+  const queryClient = useQueryClient();
   const postOwner = post.user;
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
   const isLiked = false;
 
-  const isMyPost = true;
+  const isMyPost = authUser.user._id === postOwner._id;
 
   const formattedDate = "1h";
 
   const isCommenting = false;
+  const { mutate: deletePost, isPending } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await axios.delete(`/api/posts/${post._id}`);
 
-  const handleDeletePost = () => {};
+        const { data } = res;
+        if (data.message) {
+          return data;
+        }
+      } catch (error) {
+        console.log(error);
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Post deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to delete the post");
+      console.error("Delete post error:", error);
+    },
+  });
+  const handleDeletePost = () => {
+    deletePost();
+  };
 
   const handlePostComment = (e) => {
     e.preventDefault();
@@ -54,10 +84,13 @@ const Post = ({ post }) => {
             </span>
             {isMyPost && (
               <span className="flex justify-end flex-1">
-                <FaTrash
-                  className="cursor-pointer hover:text-red-500"
-                  onClick={handleDeletePost}
-                />
+                {!isPending && (
+                  <FaTrash
+                    className="cursor-pointer hover:text-red-500"
+                    onClick={() => handleDeletePost()}
+                  />
+                )}
+                {isPending && <LoadingSpinner size="sm" />}
               </span>
             )}
           </div>
@@ -92,7 +125,7 @@ const Post = ({ post }) => {
                 className="modal border-none outline-none"
               >
                 <div className="modal-box rounded border border-gray-600">
-                  <h3 className="font-bold text-lg mb-4">COMMENTS</h3>
+                  <h3 className="fon3t-bold text-lg mb-4">COMMENTS</h3>
                   <div className="flex flex-col gap-3 max-h-60 overflow-auto">
                     {post.comments.length === 0 && (
                       <p className="text-sm text-slate-500">
