@@ -9,7 +9,7 @@ import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import { Link } from "react-router-dom";
-import { formatPostDate } from "../../utils/db/data/date/index.js";
+import { formatPostDate } from "../../utils/date/index.js";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
@@ -26,7 +26,6 @@ const Post = ({ post }) => {
     mutationFn: async () => {
       try {
         const res = await axios.delete(`/api/posts/${post._id}`);
-
         const { data } = res;
         if (data.message) {
           return data;

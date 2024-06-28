@@ -1,37 +1,48 @@
 import { Link } from "react-router-dom";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
-
+import axios from "axios";
+import toast from "react-hot-toast";
 import { IoSettingsOutline } from "react-icons/io5";
 import { FaUser } from "react-icons/fa";
 import { FaHeart } from "react-icons/fa6";
-
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 const NotificationPage = () => {
-  const isLoading = false;
-  const notifications = [
-    {
-      _id: "1",
-      from: {
-        _id: "1",
-        username: "johndoe",
-        profileImg: "/avatars/boy2.png",
-      },
-      type: "follow",
+  const queryClient = useQueryClient();
+  const { data: notifications, isLoading } = useQuery({
+    queryKey: ["notifications"],
+    queryFn: async () => {
+      try {
+        const res = await axios.get("/api/notifications");
+        const { data } = res;
+        if (data.message) {
+          toast.error(data.message);
+        }
+        return data;
+      } catch (error) {
+        toast.error(error.response.data.error);
+        throw new Error(error);
+      }
     },
-    {
-      _id: "2",
-      from: {
-        _id: "2",
-        username: "janedoe",
-        profileImg: "/avatars/girl1.png",
-      },
-      type: "like",
+  });
+
+  const { mutate: deleteNotifications } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await axios.delete("/api/notifications");
+        const { data } = res;
+        if (data.message) {
+          toast.success(data.message);
+        }
+        return data;
+      } catch (error) {
+        toast.error(error.response.data.error);
+        throw new Error(error);
+      }
     },
-  ];
-
-  const deleteNotifications = () => {
-    alert("All notifications deleted");
-  };
-
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
   return (
     <>
       <div className="flex-[4_4_0] border-l border-r border-gray-700 min-h-screen">
@@ -74,7 +85,7 @@ const NotificationPage = () => {
                     <img
                       src={
                         notification.from.profileImg ||
-                        "/avatar-placeholder.png"
+                        "../../../avatar-placeholder (1).png"
                       }
                     />
                   </div>
