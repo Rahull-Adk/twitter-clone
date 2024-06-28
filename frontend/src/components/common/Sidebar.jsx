@@ -21,7 +21,7 @@ const Sidebar = () => {
         return data;
       } catch (error) {
         toast.error(error.response.data.error);
-        throw new Error(error);
+        return error;
       }
     },
     onSuccess: () => {
