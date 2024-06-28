@@ -9,6 +9,7 @@ import { FaTrash } from "react-icons/fa";
 import { useState } from "react";
 import LoadingSpinner from "./LoadingSpinner.jsx";
 import { Link } from "react-router-dom";
+import { formatPostDate } from "../../utils/db/data/date/index.js";
 
 const Post = ({ post }) => {
   const [comment, setComment] = useState("");
@@ -19,9 +20,8 @@ const Post = ({ post }) => {
 
   const isMyPost = authUser.user._id === postOwner._id;
 
-  const formattedDate = "1h";
+  const formattedDate = formatPostDate(post.createdAt);
 
-  const isCommenting = true;
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
     mutationFn: async () => {
       try {
@@ -52,8 +52,6 @@ const Post = ({ post }) => {
         const res = await axios.post(`/api/posts/like/${post._id}`);
         const { data } = res;
         if (data.message) {
-          toast.success(data.message);
-          console.log(data);
           return data;
         }
       } catch (error) {
@@ -81,12 +79,41 @@ const Post = ({ post }) => {
       console.error("Like post error:", error);
     },
   });
+
+  const { mutate: commentPost, isPending: isCommenting } = useMutation({
+    mutationFn: async () => {
+      try {
+        const res = await axios.post(`/api/posts/comment/${post._id}`, {
+          text: comment,
+        });
+        const { data } = res;
+        if (data.message) {
+          return data;
+        }
+      } catch (error) {
+        console.log(error);
+        throw new Error(error);
+      }
+    },
+    onSuccess: () => {
+      toast.success("Comment posted successfully");
+      setComment("");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error) => {
+      toast.error("Failed to comment the post");
+      console.error("Comment post error:", error);
+    },
+  });
+
   const handleDeletePost = () => {
     deletePost();
   };
 
   const handlePostComment = (e) => {
     e.preventDefault();
+    if (isCommenting) return;
+    commentPost();
   };
 
   const handleLikePost = () => {
@@ -178,7 +205,7 @@ const Post = ({ post }) => {
                             <img
                               src={
                                 comment.user.profileImg ||
-                                "/avatar-placeholder.png"
+                                "../../../avatar-placeholder (1).png"
                               }
                             />
                           </div>
