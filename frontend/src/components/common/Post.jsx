@@ -58,20 +58,13 @@ const Post = ({ post }) => {
       }
     },
     onSuccess: (data) => {
-      // Not best pratices
-      // queryClient.invalidateQueries({ queryKey: ["posts"] });
-      // instead, update the cache directly for that post
       queryClient.setQueryData(["posts"], (oldData) => {
-        if (!oldData) return oldData;
-        return {
-          ...oldData,
-          posts: oldData.posts.map((p) => {
-            if (p._id === post._id) {
-              return { ...p, likes: data.updatedLikes };
-            }
-            return p;
-          }),
-        };
+        return oldData.map((p) => {
+          if (p._id === post._id) {
+            return { ...p, likes: data.updatedLikes };
+          }
+          return p;
+        });
       });
     },
     onError: (error) => {

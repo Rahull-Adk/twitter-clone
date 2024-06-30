@@ -2,7 +2,7 @@ import { User } from "../models/user.model.js";
 import { Post } from "../models/post.model.js";
 import { v2 as cloudinary } from "cloudinary";
 import { Notification } from "../models/notification.model.js";
-import { response } from "express";
+
 export const createPost = async (req, res) => {
   try {
     const { text } = req.body;
@@ -107,10 +107,11 @@ export const likeUnLikePost = async (req, res) => {
     if (userLikePost) {
       //unlike post
       await Post.updateOne({ _id: postId }, { $pull: { likes: userId } });
-      await User.updateOne({ _id: postId }, { $pull: { likedPosts: postId } });
+      await User.updateOne({ _id: userId }, { $pull: { likedPosts: postId } });
       const updatedLikes = post.likes.filter(
         (id) => id.toString() !== userId.toString()
       );
+
       return res
         .status(200)
         .json({ message: "Post unliked successfully", updatedLikes });
@@ -124,6 +125,7 @@ export const likeUnLikePost = async (req, res) => {
         to: post.user,
         type: "like",
       });
+
       return res
         .status(200)
         .json({ message: "Post liked successfully", updatedLikes });
@@ -144,7 +146,7 @@ export const getAllPosts = async (req, res) => {
     if (posts.lenght === 0) {
       return res.status(200).json([]);
     }
-    res.status(200).json({ posts, message: "All posts fetched successfully" });
+    res.status(200).json(posts);
   } catch (error) {
     console.log(`Error in getAllPost controller`, error);
     res.status(500).json({ error: "Internal Server Error" });
@@ -152,7 +154,8 @@ export const getAllPosts = async (req, res) => {
 };
 
 export const getLikedPosts = async (req, res) => {
-  const userId = req.params.id;
+  const { userId } = req.params;
+
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -164,6 +167,7 @@ export const getLikedPosts = async (req, res) => {
     })
       .populate({ path: "user", select: "-password" })
       .populate({ path: "comments.user", select: "-password" });
+    console.log("Hi", likedPosts);
     return res.status(200).json(likedPosts);
   } catch (error) {
     console.log(`Error in getLikedPosts controller`, error);
@@ -187,6 +191,30 @@ export const getFollowingPosts = async (req, res) => {
     res.status(200).json(followingPosts);
   } catch (error) {
     console.log(`Error in getFollowingPosts controller`, error);
+    res.status(500).json({ error: "Internal Server Error" });
+  }
+};
+
+export const getUserPosts = async (req, res) => {
+  try {
+    const { username } = req.params;
+    const user = await User.findOne({ username });
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    const posts = await Post.find({ user: user._id })
+      .sort({ createdAt: -1 })
+      .populate({
+        path: "user",
+        select: "-password",
+      })
+      .populate({
+        path: "comments.user",
+        select: "-password",
+      });
+    res.status(200).json(posts);
+  } catch (error) {
+    console.log(`Error in getUserProflie controller`, error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };

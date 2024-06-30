@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import XSvg from "../../../components/svgs/X";
 import { toast } from "react-hot-toast";
 import { MdOutlineMail } from "react-icons/md";
@@ -17,6 +17,7 @@ const SignUpPage = () => {
     password: "",
   });
 
+  const queryClient = useQueryClient();
   const { mutate, isError, isLoading, error } = useMutation({
     mutationFn: async ({ email, username, fullName, password }) => {
       try {
@@ -37,6 +38,9 @@ const SignUpPage = () => {
         console.log(error);
         toast.error(error.response.data.error);
       }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["authUser"] });
     },
   });
 
