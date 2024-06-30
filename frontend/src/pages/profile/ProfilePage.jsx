@@ -3,24 +3,26 @@ import { Link, useParams } from "react-router-dom";
 import Posts from "../../components/common/Posts";
 import ProfileHeaderSkeleton from "../../components/skeletons/ProfileHeaderSkeleton";
 import EditProfileModal from "./EditProfileModal";
-import { useQuery } from "@tanstack/react-query";
-import { POSTS } from "../../utils/db/dummy";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import toast from "react-hot-toast";
+import useFollow from "../../hooks/useFollow.jsx";
 import axios from "axios";
 import { FaArrowLeft } from "react-icons/fa6";
 import { IoCalendarOutline } from "react-icons/io5";
 import { FaLink } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import { formatMemberSinceDate } from "../../utils/date";
+import useUpdateUserProfile from "../../hooks/useUpdateUserProfile.jsx";
 
 const ProfilePage = () => {
+  const queryClient = useQueryClient();
   const [coverImg, setCoverImg] = useState(null);
   const [profileImg, setProfileImg] = useState(null);
   const [feedType, setFeedType] = useState("posts");
-
+  const cachedAuthUser = queryClient.getQueryData(["authUser"]);
   const coverImgRef = useRef(null);
   const profileImgRef = useRef(null);
-
-  const isMyProfile = true;
+  const { follow, isPending } = useFollow();
   const username = useParams();
 
   const {
@@ -38,9 +40,10 @@ const ProfilePage = () => {
         if (data.message) {
           console.log(data.message);
         }
-
+        console.log("Hi", data);
         return data;
       } catch (error) {
+        toast.error(error.data.response.error);
         throw new Error(error);
       }
     },
@@ -48,6 +51,12 @@ const ProfilePage = () => {
   useEffect(() => {
     refetch();
   }, [username, refetch]);
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+
+  const isMyProfile = authUser.user._id === user?.user?._id;
+  console.log("User", user);
+  const amIFollowing = authUser?.user?.following.includes(user?.user?._id);
+  const { updateProfile, isUpdating } = useUpdateUserProfile();
   const handleImgChange = (e, state) => {
     const file = e.target.files[0];
     if (file) {
@@ -80,7 +89,7 @@ const ProfilePage = () => {
                 <div className="flex flex-col">
                   <p className="font-bold text-lg">{user?.user?.fullName}</p>
                   <span className="text-sm text-slate-500">
-                    {POSTS?.length} posts
+                    {Posts?.length} posts
                   </span>
                 </div>
               </div>
@@ -136,21 +145,27 @@ const ProfilePage = () => {
                 </div>
               </div>
               <div className="flex justify-end px-4 mt-5">
-                {isMyProfile && <EditProfileModal />}
+                {isMyProfile && <EditProfileModal authUser={authUser} />}
                 {!isMyProfile && (
                   <button
                     className="btn btn-outline rounded-full btn-sm"
-                    onClick={() => alert("Followed successfully")}
+                    onClick={() => follow(user?.user?._id)}
                   >
-                    Follow
+                    {isPending && "Loading..."}{" "}
+                    {!isPending && amIFollowing && "Unfollow"}
+                    {!isPending && !amIFollowing && "Follow"}
                   </button>
                 )}
                 {(coverImg || profileImg) && (
                   <button
                     className="btn btn-primary rounded-full btn-sm text-white px-4 ml-2"
-                    onClick={() => alert("Profile updated successfully")}
+                    onClick={async () => {
+                      await updateProfile({ coverImg, profileImg });
+                      setProfileImg(null);
+                      setCoverImg(null);
+                    }}
                   >
-                    Update
+                    {isUpdating ? "Updating..." : "Update"}
                   </button>
                 )}
               </div>

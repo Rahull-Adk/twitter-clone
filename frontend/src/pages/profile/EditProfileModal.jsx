@@ -1,6 +1,9 @@
-import { useState } from "react";
-
-const EditProfileModal = () => {
+import { useEffect, useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import useUpdateUserProfile from "../../hooks/useUpdateUserProfile.jsx";
+import axios from "axios";
+import toast from "react-hot-toast";
+const EditProfileModal = ({ authUser }) => {
   const [formData, setFormData] = useState({
     fullName: "",
     username: "",
@@ -10,11 +13,23 @@ const EditProfileModal = () => {
     newPassword: "",
     currentPassword: "",
   });
-
+  const { updateProfile, isUpdating } = useUpdateUserProfile();
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-
+  useEffect(() => {
+    if (authUser) {
+      setFormData({
+        fullName: authUser.user.fullName,
+        username: authUser.user.username,
+        email: authUser.user.email,
+        bio: authUser.user.bio,
+        link: authUser.user.link,
+        newPassword: "",
+        currentPassword: "",
+      });
+    }
+  }, [authUser]);
   return (
     <>
       <button
@@ -32,7 +47,7 @@ const EditProfileModal = () => {
             className="flex flex-col gap-4"
             onSubmit={(e) => {
               e.preventDefault();
-              alert("Profile updated successfully");
+              updateProfile(formData);
             }}
           >
             <div className="flex flex-wrap gap-2">
@@ -96,8 +111,11 @@ const EditProfileModal = () => {
               name="link"
               onChange={handleInputChange}
             />
-            <button className="btn btn-primary rounded-full btn-sm text-white">
-              Update
+            <button
+              type="submit"
+              className="btn btn-primary rounded-full btn-sm text-white"
+            >
+              {isUpdating ? "Updating..." : "Update"}
             </button>
           </form>
         </div>

@@ -15,11 +15,6 @@ const Post = ({ post }) => {
   const [comment, setComment] = useState("");
   const queryClient = useQueryClient();
   const postOwner = post.user;
-  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
-  const isLiked = post.likes.includes(authUser.user._id);
-
-  const isMyPost = authUser.user._id === postOwner._id;
-
   const formattedDate = formatPostDate(post.createdAt);
 
   const { mutate: deletePost, isPending: isDeleting } = useMutation({
@@ -112,7 +107,10 @@ const Post = ({ post }) => {
     if (isLiking) return;
     likeUnlikePost();
   };
+  const { data: authUser } = useQuery({ queryKey: ["authUser"] });
+  const isLiked = post.likes.includes(authUser.user._id);
 
+  const isMyPost = authUser.user._id === postOwner._id;
   return (
     <>
       <div className="flex gap-2 items-start p-4 border-b border-gray-700">
